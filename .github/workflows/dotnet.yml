@@ -1,0 +1,21 @@
+name: Tech-Challenge3
+on:
+  pull_request:
+    branches: [ "master" ]
+jobs:
+  check-application-contacts-consumer:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Open folder
+      run: cd ./ContactsConsumer
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build project
+      run: dotnet build --no-restore
+    - name: Test project
+      run: dotnet test

@@ -3,9 +3,11 @@ using Common.MessagingService.QueuesConfig;
 using Domain.Contact.Entity;
 using Domain.Region.Entity;
 using Domain.Region.Repository;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace ContactConsumer
 {
@@ -30,7 +32,7 @@ namespace ContactConsumer
                     using var scopeService = _serviceProvider.CreateScope();
                     var _rabbitMqService = scopeService.ServiceProvider.GetRequiredService<IRabbitMqService>();
 
-                    using var conn = await _rabbitMqService.GetConnection("localhost", "guest", "guest");
+                    using var conn = await _rabbitMqService.GetConnection("rabbitmq", "guest", "guest");
                     using var channel = await conn.CreateChannelAsync();
 
                     await channel.QueueDeclareAsync(
@@ -63,18 +65,25 @@ namespace ContactConsumer
 
         private async Task Consumer_InsertReceivedAsync(object sender, BasicDeliverEventArgs eventArgs)
         {
-            using var scopeService = _serviceProvider.CreateScope();
-            var regionRepository = scopeService.ServiceProvider.GetRequiredService<IRegionRepository>();
-
-            var body = eventArgs.Body.ToArray();
-            var message = Encoding.UTF8.GetString(body);
-            var entity = JsonSerializer.Deserialize<RegionEntity>(message);
-            _logger.LogInformation("Insert Worker get entity: " + JsonSerializer.Serialize(entity));
-
-            if (entity != null)
+            try
             {
-                await regionRepository.AddAsync(entity);
-                _logger.LogInformation("Insert Worker added entity: " + JsonSerializer.Serialize(entity));
+                using var scopeService = _serviceProvider.CreateScope();
+                var regionRepository = scopeService.ServiceProvider.GetRequiredService<IRegionRepository>();
+
+                var body = eventArgs.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                var entity = JsonSerializer.Deserialize<RegionEntity>(message);
+                _logger.LogInformation("Insert Worker get entity: " + JsonSerializer.Serialize(entity));
+
+                if (entity != null)
+                {
+                    await regionRepository.AddAsync(entity);
+                    _logger.LogInformation("Insert Worker added entity: " + JsonSerializer.Serialize(entity));
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogInformation("Insert Worker error: {err}", ex.Message);
             }
         }
     }

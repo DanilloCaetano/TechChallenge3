@@ -1,0 +1,116 @@
+version: "3"
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # Porta padrão do RabbitMQ para mensagens
+      - "15672:15672" # Porta para a interface de gerenciamento
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - web_api_metrics_network
+  api-regions:
+    build:
+      context: ./RegionsService
+      dockerfile: Dockerfile
+      args:
+        version: 1
+    image: api-regions
+    ports:
+      - 8080:8080
+    networks:
+      - web_api_metrics_network
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASS: guest  
+  api-contacts:
+    build:
+      context: ./ContactsService
+      dockerfile: Dockerfile
+      args:
+        version: 1
+    image: api-contacts
+    ports:
+      - 7070:8080
+    networks:
+      - web_api_metrics_network
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASS: guest
+  consumer-contacts:
+    build:
+      context: ./ContactsConsumer
+      dockerfile: Dockerfile
+      args:
+        version: 1
+    image: consumer-contacts
+    ports:
+      - 6060:6060
+    networks:
+      - web_api_metrics_network
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASS: guest
+  consumer-regions:
+    build:
+      context: ./RegionsConsumer
+      dockerfile: Dockerfile
+      args:
+        version: 1
+    image: consumer-regions
+    ports:
+      - 5050:5050
+    networks:
+      - web_api_metrics_network
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASS: guest
+  prometheus:
+    build:
+      context: ./prometheus
+      dockerfile: Dockerfile
+      args:
+        version: 1
+    image: prometheus-local
+    restart: always
+    ports: 
+      - 9090:9090
+    networks:
+      - web_api_metrics_network
+    volumes: 
+      - './prometheus/data:/data'
+  grafana:
+    build:
+      context: ./grafana
+      dockerfile: Dockerfile
+      args:
+        version: 1
+    image: grafana-local
+    restart: always
+    ports:
+      - 3000:3000
+    networks: 
+      - web_api_metrics_network    
+
+networks:
+  web_api_metrics_network:
+    driver: overlay
+    attachable: true

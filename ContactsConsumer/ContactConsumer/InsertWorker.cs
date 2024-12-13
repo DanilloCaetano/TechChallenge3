@@ -30,7 +30,7 @@ namespace ContactConsumer
                     using var scopeService = _serviceProvider.CreateScope();
                     var _rabbitMqService = scopeService.ServiceProvider.GetRequiredService<IRabbitMqService>();
 
-                    using var conn = await _rabbitMqService.GetConnection("localhost", "guest", "guest");
+                    using var conn = await _rabbitMqService.GetConnection("rabbitmq", "guest", "guest");
                     using var channel = await conn.CreateChannelAsync();
 
                     await channel.QueueDeclareAsync(
@@ -63,19 +63,27 @@ namespace ContactConsumer
 
         private async Task Consumer_InsertReceivedAsync(object sender, BasicDeliverEventArgs eventArgs)
         {
-            using var scopeService = _serviceProvider.CreateScope();
-            var _contactsService = scopeService.ServiceProvider.GetRequiredService<IContactRepository>();
-
-            var body = eventArgs.Body.ToArray();
-            var message = Encoding.UTF8.GetString(body);
-            var entity = JsonSerializer.Deserialize<ContactEntity>(message);
-            _logger.LogInformation("Insert Worker get entity: " + JsonSerializer.Serialize(entity));
-
-            if (entity != null)
+            try
             {
-                await _contactsService.AddAsync(entity);
-                _logger.LogInformation("Insert Worker added entity: " + JsonSerializer.Serialize(entity));
+                using var scopeService = _serviceProvider.CreateScope();
+                var _contactsService = scopeService.ServiceProvider.GetRequiredService<IContactRepository>();
+
+                var body = eventArgs.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                var entity = JsonSerializer.Deserialize<ContactEntity>(message);
+                _logger.LogInformation("Insert Worker get entity: " + JsonSerializer.Serialize(entity));
+
+                if (entity != null)
+                {
+                    await _contactsService.AddAsync(entity);
+                    _logger.LogInformation("Insert Worker added entity: " + JsonSerializer.Serialize(entity));
+                }
             }
+            catch(Exception ex)
+            {
+                _logger.LogInformation("Insert Worker error: {err}", ex.Message);
+            }
+            
         }
     }
 }

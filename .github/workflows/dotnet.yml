@@ -11,11 +11,57 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-    - name: Open folder
-      run: cd ./ContactsConsumer
-    - name: Restore dependencies
+    - name: Restore dependencies contacts consumer
+      working-directory: ./ContactsConsumer
       run: dotnet restore
-    - name: Build project
+    - name: Build project contacts consumer
+      working-directory: ./ContactsConsumer
       run: dotnet build --no-restore
-    - name: Test project
+  check-application-contacts-service:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies contacts service
+      working-directory: ./ContactsService
+      run: dotnet restore
+    - name: Build project contacts service
+      working-directory: ./ContactsService
+      run: dotnet build --no-restore
+    - name: Test project contacts service
+      working-directory: ./ContactsService
+      run: dotnet test
+  check-application-regions-consumer:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies Regions Consumer
+      working-directory: ./RegionsConsumer
+      run: dotnet restore
+    - name: Build project Regions Consumer
+      working-directory: ./RegionsConsumer
+      run: dotnet build --no-restore
+  check-application-regions-service:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies Regions Service
+      working-directory: ./RegionsService
+      run: dotnet restore
+    - name: Build project Regions Service
+      working-directory: ./RegionsService
+      run: dotnet build --no-restore
+    - name: Test project Regions Service
+      working-directory: ./RegionsService
       run: dotnet test

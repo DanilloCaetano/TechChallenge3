@@ -4,8 +4,8 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"   # Porta padrão do RabbitMQ para mensagens
-      - "15672:15672" # Porta para a interface de gerenciamento
+      - "5672:5672"
+      - "15672:15672" 
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest

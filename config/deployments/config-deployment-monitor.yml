@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-app
+  annotations:
+    description: "Deployment for prometheus"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-app
+  template:
+    metadata:
+      labels:
+        app: prometheus-app
+    spec:
+      containers:
+      - name: prometheus-coll
+        image: prom/prometheus:v2.17.1
+        ports:
+        - containerPort: 9090
+        volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus/
+      volumes:
+        - name: config-volume
+          configMap:
+            name: prometheus-config
+            defaultMode: 420
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-app
+  annotations:
+    description: "Deployment for grafana"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+       app: grafana-app
+  template:
+    metadata:
+     labels:
+       app: grafana-app
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:7.3.1
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+            - name: config-volume
+              mountPath: /var/lib/grafana
+      volumes:
+        - name: config-volume
+          persistentVolumeClaim:
+            claimName: grafana-pvc
+---
+

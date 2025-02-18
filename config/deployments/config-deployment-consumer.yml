@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer-region
+  annotations:
+    description: "Deployment for consumer region"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer-region-worker
+  template:
+    metadata:
+      labels:
+        app: consumer-region-worker
+    spec:
+      containers:
+      - name: container-consumer-region-worker
+        image: docker.io/eduardo1219/regionconsumer
+        ports:
+        - containerPort: 6060
+        resources:
+          requests:
+            memory: "100Mi"
+          limits:
+            memory: "100Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer-contacts
+  annotations:
+    description: "Deployment for consumer contacts"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer-contact-worker
+  template:
+    metadata:
+      labels:
+        app: consumer-contact-worker
+    spec:
+      containers:
+      - name: container-consumer-contact-worker
+        image: docker.io/eduardo1219/contactconsumer
+        ports:
+        - containerPort: 4040
+        resources:
+          requests:
+            memory: "100Mi"
+          limits:
+            memory: "100Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-app
+  annotations:
+    description: "Deployment for rabbitmq"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq-app
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-app
+    spec:
+      containers:
+      - name: rabbitmq-app
+        image: rabbitmq:3-management
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+---

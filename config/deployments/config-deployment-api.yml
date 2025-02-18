@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  annotations:
+    description: "Deployment for my-region-api"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: app-container
+        image: docker.io/eduardo1219/regionservice
+        ports:
+        - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-contact
+  annotations:
+    description: "Deployment for my-contact-api"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-contact-api
+  template:
+    metadata:
+      labels:
+        app: my-contact-api
+    spec:
+      containers:
+      - name: container-api
+        image: docker.io/eduardo1219/contactservice
+        ports:
+        - containerPort: 8080
+---
+

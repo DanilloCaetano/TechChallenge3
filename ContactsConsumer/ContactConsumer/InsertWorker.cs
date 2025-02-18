@@ -30,7 +30,7 @@ namespace ContactConsumer
                     using var scopeService = _serviceProvider.CreateScope();
                     var _rabbitMqService = scopeService.ServiceProvider.GetRequiredService<IRabbitMqService>();
 
-                    using var conn = await _rabbitMqService.GetConnection("rabbitmq", "guest", "guest");
+                    using var conn = await _rabbitMqService.GetConnection("rabbitmq-service.default.svc.cluster.local", "guest", "guest");
                     using var channel = await conn.CreateChannelAsync();
 
                     await channel.QueueDeclareAsync(

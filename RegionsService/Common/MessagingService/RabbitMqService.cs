@@ -13,7 +13,7 @@ namespace Common.MessagingService
         public async Task<IConnection> GetConnection(string hostName, string user, string pass)
         {
             // User and pass in parameters, beacuse is educational project
-            var factory = new ConnectionFactory() { HostName = hostName, UserName = user, Password = pass };
+            var factory = new ConnectionFactory() { HostName = hostName, UserName = user, Password = pass, Port= 5672 };
             var connection = await factory.CreateConnectionAsync();
             return connection;
         }
@@ -22,7 +22,7 @@ namespace Common.MessagingService
         {
             try
             {
-                using var conn = await GetConnection("rabbitmq", "guest", "guest");
+                using var conn = await GetConnection("rabbitmq-service.default.svc.cluster.local", "guest", "guest");
                 using var channel = await conn.CreateChannelAsync();
 
                 await channel.QueueDeclareAsync(

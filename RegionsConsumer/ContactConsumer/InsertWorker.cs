@@ -5,6 +5,7 @@ using Domain.Region.Entity;
 using Domain.Region.Repository;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System;
 using System.Text;
 using System.Text.Json;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
@@ -32,7 +33,7 @@ namespace ContactConsumer
                     using var scopeService = _serviceProvider.CreateScope();
                     var _rabbitMqService = scopeService.ServiceProvider.GetRequiredService<IRabbitMqService>();
 
-                    using var conn = await _rabbitMqService.GetConnection("rabbitmq", "guest", "guest");
+                    using var conn = await _rabbitMqService.GetConnection("rabbitmq-service.default.svc.cluster.local", "guest", "guest");
                     using var channel = await conn.CreateChannelAsync();
 
                     await channel.QueueDeclareAsync(
@@ -43,28 +44,33 @@ namespace ContactConsumer
                         arguments: null);
 
                     var consumer = new AsyncEventingBasicConsumer(channel);
-                    consumer.ReceivedAsync += Consumer_InsertReceivedAsync;
+                    ulong tg = 1;
+                    consumer.ReceivedAsync += async (model, ea) => 
+                    {
+                        tg = ea.DeliveryTag;
+                        bool resultInsert = await Consumer_InsertReceivedAsync(model, ea);
+                    };
 
-                    await channel.BasicConsumeAsync(
-                        queue: QueueNames.RegionInsert,
-                        autoAck: true,
-                        consumer: consumer,
-                        noLocal: false,
-                        exclusive: false,
-                        consumerTag: string.Empty,
-                        arguments: null);
+                    //await channel.BasicConsumeAsync(
+                    //    queue: QueueNames.RegionInsert,
+                    //    autoAck: false,
+                    //    consumer: consumer);
+
+                    string consumerTag = await channel.BasicConsumeAsync(QueueNames.RegionInsert, false, consumer);
+                    await channel.BasicAckAsync(tg, false);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogInformation("Insert Worker error: {err}", ex.Message);
                 }
 
-                await Task.Delay(2500, stoppingToken);
+                await Task.Delay(10000, stoppingToken);
             }
         }
 
-        private async Task Consumer_InsertReceivedAsync(object sender, BasicDeliverEventArgs eventArgs)
+        private async Task<bool> Consumer_InsertReceivedAsync(object sender, BasicDeliverEventArgs eventArgs)
         {
+            bool result = true;
             try
             {
                 using var scopeService = _serviceProvider.CreateScope();
@@ -83,8 +89,11 @@ namespace ContactConsumer
             }
             catch(Exception ex)
             {
+                result = false;
                 _logger.LogInformation("Insert Worker error: {err}", ex.Message);
             }
+
+            return result;
         }
     }
 }

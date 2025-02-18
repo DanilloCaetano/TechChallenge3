@@ -22,7 +22,7 @@ namespace Common.MessagingService
         {
             try
             {
-                using var conn = await GetConnection("rabbitmq", "guest", "guest");
+                using var conn = await GetConnection("rabbitmq-service.default.svc.cluster.local", "guest", "guest");
                 using var channel = await conn.CreateChannelAsync();
 
                 await channel.QueueDeclareAsync(

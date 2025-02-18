@@ -35,7 +35,7 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddRefitClient<IRegionIntegration>().ConfigureHttpClient(c =>
 {
-    c.BaseAddress = new Uri("http://host.docker.internal:8080/api");
+    c.BaseAddress = new Uri("http://sv-region-api:5050/api");
 
 });
 
